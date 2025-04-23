@@ -11,7 +11,7 @@ extern "C" {
 #define CURRENT_VER_MAX (64)
 #define COMMIT_VER_MAX  (10)
 
-enum {
+typedef enum {
     ROW_PRO_CUR_VERSION = 0,
     ROW_PRO_RESET_ALL_SETTINGS,
     ROW_PRO_UPDATE_GOGGLE,
@@ -21,7 +21,7 @@ enum {
     ROW_PRO_COUNT
 } ROW_PRO;
 
-enum {
+typedef enum {
     ROW_LITE_CUR_VERSION = 0,
     ROW_LITE_RESET_ALL_SETTINGS,
     ROW_LITE_UPDATE_GOGGLE,
