@@ -26,11 +26,11 @@ lv_obj_t *page_sleep_create(lv_obj_t *parent, panel_arr_t *arr) {
     lv_obj_t *cont = lv_menu_cont_create(section);
     lv_obj_t *desc_label = lv_label_create(cont);
     snprintf(buf, sizeof(buf), "%s.\n%s.",
-            _lang("Click the Enter Button to go sleep"),
-            _lang("Click any button to exit sleep mode"));
+             _lang("Click the Enter Button to go sleep"),
+             _lang("Click any button to exit sleep mode"));
     lv_label_set_text(desc_label, buf);
     lv_obj_set_style_text_font(desc_label, &lv_font_montserrat_18, 0);
-    lv_obj_set_style_text_color(desc_label, lv_color_make(255, 255, 255), 0);
+    lv_obj_set_style_text_color(desc_label, lv_color_hex(TEXT_COLOR_DEFAULT), 0);
     lv_obj_set_style_pad_top(desc_label, 8, 0);
     lv_label_set_long_mode(desc_label, LV_LABEL_LONG_WRAP);
 
