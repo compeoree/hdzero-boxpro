@@ -50,7 +50,7 @@ typedef struct {
     lv_obj_t *dropdown;
     lv_obj_t *update;
     lv_obj_t *back;
-    char *alt_title;
+    const char *alt_title;
     char path[256];
     char **files;
     bool dropdown_focused;
@@ -746,7 +746,7 @@ static lv_obj_t *page_version_create(lv_obj_t *parent, panel_arr_t *arr) {
     cur_ver_label = create_label_item(cont, _lang("Current Version"), 1, ROW_CUR_VERSION, 2);
     lv_obj_set_size(cur_ver_label, 720, 40);
 
-    btn_reset_all_settings = create_label_item(cont, _lang("Reset all settings)", 1, ROW_RESET_ALL_SETTINGS, 2);
+    btn_reset_all_settings = create_label_item(cont, _lang("Reset all settings"), 1, ROW_RESET_ALL_SETTINGS, 2);
     snprintf(buf, sizeof(buf), "%s %s", _lang("Update"), _lang("BoxPro"));
     btn_goggle = create_label_item(cont, buf, 1, ROW_UPDATE_GOGGLE, 2);
 
@@ -923,11 +923,11 @@ static void page_version_on_roller(uint8_t key) {
 }
 
 static void page_version_on_click(uint8_t key, int sel) {
+    char buf[80];
     if (!page_version_release_notes_active()) {
         version_update_title();
         if (sel == ROW_CUR_VERSION) {
             FILE *fp;
-            char buf[80];
             int dat[16];
             fp = fopen("/tmp/wr_reg", "r");
             if (fp) {
@@ -973,16 +973,16 @@ static void page_version_on_click(uint8_t key, int sel) {
             if (sel == ROW_UPDATE_ESP32) { // flash ESP via SD
                 lv_obj_clear_flag(bar_esp, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_add_flag(label_esp, LV_OBJ_FLAG_HIDDEN);
-            snprintf(buf, sizeof(buf), "%s...", _lang("Flashing"));
-            lv_label_set_text(btn_esp, buf);
+                snprintf(buf, sizeof(buf), "%s...", _lang("Flashing"));
+                lv_label_set_text(btn_esp, buf);
                 lv_timer_handler();
                 esp_loader_error_t ret = flash_elrs();
                 lv_obj_add_flag(bar_esp, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_clear_flag(label_esp, LV_OBJ_FLAG_HIDDEN);
-                if (ret == ESP_LOADER_SUCCESS){
+                if (ret == ESP_LOADER_SUCCESS) {
                     snprintf(buf, sizeof(buf), "#008000 %s#", _lang("SUCCESS"));
                     lv_label_set_text(btn_esp, buf);
-                }else{
+                } else {
                     snprintf(buf, sizeof(buf), "#FF0000 %s#", _lang("FAILED"));
                     lv_label_set_text(btn_esp, buf);
                 }
