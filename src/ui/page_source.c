@@ -11,9 +11,11 @@
 #include "core/dvr.h"
 #include "core/osd.h"
 #include "core/settings.h"
+#include "driver/beep.h"
 #include "driver/hardware.h"
 #include "driver/it66121.h"
 #include "driver/lcd.h"
+#include "lang/language.h"
 #include "ui/page_common.h"
 #include "ui/page_scannow.h"
 #include "ui/ui_main_menu.h"
@@ -30,6 +32,7 @@ static bool in_sourcepage = false;
 static btn_group_t btn_group0, btn_group1, btn_group2, btn_group3;
 
 static lv_obj_t *page_source_create(lv_obj_t *parent, panel_arr_t *arr) {
+    char buf[128];
     lv_obj_t *page = lv_menu_page_create(parent, NULL);
     lv_obj_clear_flag(page, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(page, 780, 600);
@@ -40,7 +43,8 @@ static lv_obj_t *page_source_create(lv_obj_t *parent, panel_arr_t *arr) {
     lv_obj_add_style(section, &style_submenu, LV_PART_MAIN);
     lv_obj_set_size(section, 780, 600);
 
-    create_text(NULL, section, false, "Source:", LV_MENU_ITEM_BUILDER_VARIANT_2);
+    snprintf(buf, sizeof(buf), "%s:", _lang("Source"));
+    create_text(NULL, section, false, buf, LV_MENU_ITEM_BUILDER_VARIANT_2);
 
     lv_obj_t *cont = lv_obj_create(section);
     lv_obj_set_size(cont, 780, 600);
@@ -55,22 +59,26 @@ static lv_obj_t *page_source_create(lv_obj_t *parent, panel_arr_t *arr) {
     create_select_item(arr, cont);
 
     label[0] = create_label_item(cont, "HDZero", 1, 0, 3);
-    label[1] = create_label_item(cont, "Analog", 1, 1, 3);
-    label[2] = create_label_item(cont, "HDMI In", 1, 2, 3);
-    label[3] = create_label_item(cont, "AV In", 1, 3, 3);
+    snprintf(buf, sizeof(buf), "%s", _lang("Analog"));
+    label[1] = create_label_item(cont, buf, 1, 1, 3);
+    snprintf(buf, sizeof(buf), "HDMI %s", _lang("In"));
+    label[2] = create_label_item(cont, buf, 1, 2, 3);
+    snprintf(buf, sizeof(buf), "AV %s", _lang("In"));
+    label[3] = create_label_item(cont, buf, 1, 3, 3);
 
     // create_btn_group_item(&btn_group0, cont, 2, "Analog Video", "NTSC", "PAL", "", "", 4);
     // btn_group_set_sel(&btn_group0, g_setting.source.analog_format);
 
-    create_btn_group_item(&btn_group1, cont, 2, "HDZero Band", "Raceband", "Lowband", "", "", 4);
+    create_btn_group_item(&btn_group1, cont, 2, _lang("HDZero Band"), _lang("Raceband"), _lang("Lowband"), "", "", 4);
     btn_group_set_sel(&btn_group1, g_setting.source.hdzero_band);
 
-    create_btn_group_item(&btn_group2, cont, 2, "HDZero BW", "Wide", "Narrow", "", "", 5);
+    create_btn_group_item(&btn_group2, cont, 2, _lang("HDZero BW)", _lang("Wide"), _lang("Narrow"), "", "", 5);
     btn_group_set_sel(&btn_group2, g_setting.source.hdzero_bw);
 
-    create_btn_group_item(&btn_group3, cont, 2, "Analog Ratio", "4:3", "16:9", "", "", 6);
+    create_btn_group_item(&btn_group3, cont, 2, _lang("Analog Ratio"), _lang("4:3"), _lang("16:9"), "", "", 6);
     btn_group_set_sel(&btn_group3, g_setting.source.analog_ratio);
 
+    snprintf(buf, sizeof(buf), "< %s", _lang("Back"));
     if (g_setting.storage.selftest) {
         pp_source.p_arr.max = 9;
         label[4] = create_label_item(cont, "LCD Pattern: Normal", 1, 7, 3);
@@ -78,13 +86,15 @@ static lv_obj_t *page_source_create(lv_obj_t *parent, panel_arr_t *arr) {
     } else {
         pp_source.p_arr.max = 8;
         label[4] = NULL;
-        create_label_item(cont, "< Back", 1, 7, 3);
+        create_label_item(cont, buf, 1, 7, 3);
     }
     return page;
 }
 
 char *state2string(uint8_t status) {
-    return status ? "#008000 Detected#" : "#C0C0C0 Disconnected";
+    static char buf[32];
+    snprintf(buf, sizeof(buf), "#%s %s#", status ? "008000" : "C0C0C0", status ? _lang("Connected") : _lang("Disconnected"));
+    return buf;
 }
 
 void source_status_timer() {
@@ -97,74 +107,126 @@ void source_status_timer() {
     ch = g_setting.scan.channel & 0x7F;
     if (g_setting.source.hdzero_band == SETTING_SOURCES_HDZERO_BAND_RACEBAND) {
         if (ch <= 8) {
-            sprintf(buf, "HDZero: R%d", ch);
+            snprintf(buf, sizeof(buf), "HDZero: R%d", ch);
         } else {
-            sprintf(buf, "HDZero: F%d", (ch - 8) * 2);
+            snprintf(buf, sizeof(buf), "HDZero: F%d", (ch - 8) * 2);
         }
     } else {
         if (ch > 8) {
             g_setting.scan.channel = 1;
         }
-        sprintf(buf, "HDZero: L%d", ch);
+        snprintf(buf, sizeof(buf), "HDZero: L%d", ch);
     }
     lv_label_set_text(label[0], buf);
 
-    sprintf(buf, "Analog: %s", channel2str(0, 0, g_setting.source.analog_channel));
+    snprintf(buf, sizeof(buf), "%s: %s", _lang("Analog"), channel2str(0, 0, g_setting.source.analog_channel));
     lv_label_set_text(label[1], buf);
 
-    sprintf(buf, "HDMI In: %s", state2string(g_source_info.hdmi_in_status));
+    snprintf(buf, sizeof(buf), "HDMI %s: %s",_lang("In"), state2string(g_source_info.hdmi_in_status));
     lv_label_set_text(label[2], buf);
 
-    sprintf(buf, "AV In: %s", state2string(g_source_info.av_in_status));
+    snprintf(buf, sizeof(buf), "AV %s: %s", _lang("In"), state2string(g_source_info.av_in_status));
     lv_label_set_text(label[3], buf);
 
     if (g_setting.storage.selftest && label[3]) {
         uint8_t oled_tm = oled_tst_mode & 0x0F;
         char *pattern_label[6] = {"Normal", "Color Bar", "Grid", "All Black", "All White", "Boot logo"};
         char str[32];
-        sprintf(str, "LCD Pattern: %s", pattern_label[oled_tm]);
+        snprintf(str, sizeof(buf), "LCD Pattern: %s", pattern_label[oled_tm]);
         lv_label_set_text(label[4], str);
     }
+}
+
+static void page_source_select_hdzero() {
+    progress_bar.start = 1;
+    app_switch_to_hdzero(true);
+    app_state_push(APP_STATE_VIDEO);
+    g_source_info.source = SOURCE_HDZERO;
+    dvr_select_audio_source(2);
+    dvr_enable_line_out(true);
+}
+
+static void page_source_select_hdmi() {
+    if (g_source_info.hdmi_in_status)
+        app_switch_to_hdmi_in();
+}
+
+static void page_source_select_av_in() {
+    app_switch_to_analog(1);
+    app_state_push(APP_STATE_VIDEO);
+    g_source_info.source = SOURCE_AV_IN;
+    dvr_select_audio_source(2);
+    dvr_enable_line_out(true);
+}
+
+static void page_source_select_analog() {
+    app_switch_to_analog(0);
+    app_state_push(APP_STATE_VIDEO);
+    g_source_info.source = SOURCE_ANALOG;
+    dvr_select_audio_source(2);
+    dvr_enable_line_out(true);
+}
+
+void source_toggle() {
+    beep_dur(BEEP_SHORT);
+    switch (g_source_info.source) {
+    case SOURCE_HDZERO:
+        page_source_select_analog();
+        break;
+    case SOURCE_ANALOG:
+        page_source_select_hdzero();
+        break;
+    case SOURCE_AV_IN:
+        page_source_select_hdzero();
+        break;
+    case SOURCE_HDMI_IN:
+        page_source_select_hdzero();
+        break;
+    }
+    Analog_Module_Power(0);
+}
+
+void source_cycle() {
+    beep_dur(BEEP_SHORT);
+    switch (g_source_info.source) {
+    case SOURCE_HDZERO:
+        if (g_source_info.hdmi_in_status) {
+            page_source_select_hdmi();
+        } else {
+            page_source_select_av_in();
+        }
+        break;
+    case SOURCE_EXPANSION:
+        page_source_select_hdzero();
+        break;
+    case SOURCE_AV_IN:
+        page_source_select_analog();
+        break;
+    case SOURCE_HDMI_IN:
+        page_source_select_av_in();
+        break;
+    }
+    Analog_Module_Power(0);
 }
 
 static void page_source_on_click(uint8_t key, int sel) {
     switch (sel) {
     case 0:
-        progress_bar.start = 1;
-        app_switch_to_hdzero(true);
-        app_state_push(APP_STATE_VIDEO);
-        g_source_info.source = SOURCE_HDZERO;
-        dvr_select_audio_source(2);
-        dvr_enable_line_out(true);
+        page_source_select_hdzero();
         break;
 
     case 1: // AV Module
-        app_switch_to_analog(0);
-        app_state_push(APP_STATE_VIDEO);
-        g_source_info.source = SOURCE_AV_MODULE;
-        dvr_select_audio_source(2);
-        dvr_enable_line_out(true);
+        page_source_select_hdzero();
         break;
 
     case 2: // HDMI in
-        if (g_source_info.hdmi_in_status)
-            app_switch_to_hdmi_in();
+        app_switch_to_hdmi_in();
         break;
 
     case 3: // AV in
-        app_switch_to_analog(1);
-        app_state_push(APP_STATE_VIDEO);
-        g_source_info.source = SOURCE_AV_IN;
-        dvr_select_audio_source(2);
-        dvr_enable_line_out(true);
+        page_source_select_av_in();
         break;
-#if (0)
-    case 4: // Analog video format
-        btn_group_toggle_sel(&btn_group0);
-        g_setting.source.analog_format = btn_group_get_sel(&btn_group0);
-        ini_putl("source", "analog_format", g_setting.source.analog_format, SETTING_INI);
-        break;
-#endif
+
     case 4: // HDZero band format
         btn_group_toggle_sel(&btn_group1);
         g_setting.source.hdzero_band = btn_group_get_sel(&btn_group1);
@@ -186,7 +248,7 @@ static void page_source_on_click(uint8_t key, int sel) {
 
     case 7:
         if (g_setting.storage.selftest && label[4]) {
-            int oled_te = (oled_tst_mode != 0);
+            uint8_t oled_te = (oled_tst_mode != 0);
             uint8_t oled_tm = (oled_tst_mode & 0x0F) - 1;
             // LOGI("OLED TE=%d,TM=%d",oled_te,oled_tm);
             Display_Pattern(oled_te, oled_tm, 4);
@@ -196,7 +258,6 @@ static void page_source_on_click(uint8_t key, int sel) {
             break;
         }
     }
-    // Analog_Module_Power(0);
 }
 
 static void page_source_enter() {

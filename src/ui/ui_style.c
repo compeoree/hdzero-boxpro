@@ -13,6 +13,7 @@ lv_style_t style_silder_select;
 lv_style_t style_silder_indicator;
 lv_style_t style_silder_knob;
 lv_style_t style_silder_pressed_color;
+lv_style_t style_silder_pressed_color;
 lv_style_t style_scan;
 lv_style_t style_select;
 lv_style_t style_osd;

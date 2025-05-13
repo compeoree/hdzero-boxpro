@@ -9,6 +9,7 @@
 #include "core/osd.h"
 #include "core/settings.h"
 #include "driver/beep.h"
+#include "lang/language.h"
 #include "ui/page_common.h"
 #include "ui/page_playback.h"
 #include "ui/page_storage.h"
@@ -135,25 +136,30 @@ int statusbar_init(void) {
         lv_obj_set_grid_cell(label[i], LV_GRID_ALIGN_CENTER, ((i + 1) * 2), 1, LV_GRID_ALIGN_CENTER, 0, 1);
     }
 
-    lv_label_set_text(label[STS_SDCARD], "SD Card                 ");
+    snprintf(buf, sizeof(buf), "%s                 ", _lang("SD Card"));
+
+    lv_label_set_text(label[STS_SDCARD], buf);
     lv_label_set_recolor(label[STS_SDCARD], true);
 
     if (g_source_info.source == SOURCE_HDZERO)
-        sprintf(buf, "RF: HDZero %s", channel2str(1, g_setting.source.hdzero_band, g_setting.scan.channel & 0x7F));
+        snprintf(buf, sizeof(buf), "%s: HDZero %s",_lang("RF), channel2str(1, g_setting.source.hdzero_band, g_setting.scan.channel & 0x7F));
     else if (g_source_info.source == SOURCE_HDMI_IN)
-        sprintf(buf, "HDMI In");
+        snprintf(buf, sizeof(buf), "HDMI %s", _lang("In"));
     else if (g_source_info.source == SOURCE_AV_IN)
-        sprintf(buf, "AV In");
+        snprintf(buf, sizeof(buf), "AV %s", _lang("In"));
     else if (g_source_info.source == SOURCE_AV_MODULE)
-        sprintf(buf, "RF: Analog %s", channel2str(0, 0, g_setting.source.analog_channel));
+        sprintf(buf, "%s: %s %s",_lang("RF"), _lang("Analog"), channel2str(0, 0, g_setting.source.analog_channel));
     else
         sprintf(buf, " ");
 
     lv_label_set_text(label[STS_SOURCE], buf);
 
     if (g_setting.is_pro) {
-        lv_label_set_text(label[STS_ELRS], "ELRS: Off");
-        lv_label_set_text(label[STS_WIFI], "WiFi: Off");
+        snprintf(buf, sizeof(buf), "ELRS: %s", _lang("Off"));
+        lv_label_set_text(label[STS_ELRS], buf);
+
+        snprintf(buf, sizeof(buf), "WiFi: %s", _lang("Off"));
+        lv_label_set_text(label[STS_WIFI], buf);
     }
 
     lv_label_set_text(label[STS_BATT], "       ");
@@ -219,13 +225,13 @@ void statubar_update(void) {
     if (channel_changed || (source_last != g_source_info.source) || (hdzero_band_last != g_setting.source.hdzero_band)) {
         memset(buf, 0, sizeof(buf));
         if (g_source_info.source == SOURCE_HDZERO)
-            sprintf(buf, "RF: HDZero %s", channel2str(1, g_setting.source.hdzero_band, g_setting.scan.channel & 0x7F));
+            snprintf(buf, sizeof(buf), "%s: HDZero %s", _lang("RF"), channel2str(1, g_setting.source.hdzero_band, g_setting.scan.channel & 0x7F));
         else if (g_source_info.source == SOURCE_HDMI_IN)
-            sprintf(buf, "HDMI In");
+            snprintf(buf, sizeof(buf), "HDMI %s", _lang("In"));
         else if (g_source_info.source == SOURCE_AV_IN)
-            sprintf(buf, "AV In");
+            snprintf(buf, sizeof(buf), "AV %s", _lang("In"));
         else if (g_source_info.source == SOURCE_AV_MODULE)
-            sprintf(buf, "RF: Analog %s", channel2str(0, 0, g_setting.source.analog_channel));
+            sprintf(buf, "%s: %s %s", _lang("RF"), _lang("Analog"), channel2str(0, 0, g_setting.source.analog_channel));
         else
             sprintf(buf, " ");
 
@@ -238,7 +244,7 @@ void statubar_update(void) {
 
     if (page_storage_is_sd_repair_active()) {
         lv_img_set_src(img_sdc, &img_sdcard);
-        lv_label_set_text(label[STS_SDCARD], "Integrity check");
+        lv_label_set_text(label[STS_SDCARD], _lang("Integrity check"));
     } else {
         if (g_sdcard_enable) {
             int cnt = get_videofile_cnt();
@@ -246,22 +252,22 @@ void statubar_update(void) {
             lv_img_set_src(img_sdc, &img_sdcard);
             if (cnt != 0) {
                 if (sdcard_is_full())
-                    snprintf(buf, sizeof(buf), "%d %s, %s %s", cnt, "clip(s)", "SD Card", "full");
+                    snprintf(buf, sizeof(buf), "%d %s, %s %s", cnt, _lang("clip(s)"), _lang("SD Card"), _lang("full"));
                 else
-                    snprintf(buf, sizeof(buf), "%d %s, %.2fGB %s", cnt, "clip(s)", gb, "available");
+                    snprintf(buf, sizeof(buf), "%d %s, %.2fGB %s", cnt, _lang("clip(s)"), gb, _lang("available"));
             } else {
                 if (sdcard_is_full())
-                    snprintf(buf, sizeof(buf), "#FF0000 %s %s#", "SD Card", "full");
+                    snprintf(buf, sizeof(buf), "#FF0000 %s %s#", _lang("SD Card"), _lang("full"));
                 else
-                    snprintf(buf, sizeof(buf), "%.2fGB %s", gb, "available");
+                    snprintf(buf, sizeof(buf), "%.2fGB %s", gb, _lang("available"));
             }
         } else {
             lv_img_set_src(img_sdc, &img_noSdcard);
 
             if (sdcard_inserted()) {
-                sprintf(buf, "Unsupported");
+                strcpy(buf, _lang("Unsupported"));
             } else {
-                sprintf(buf, "No SD Card");
+                strcpy(buf, _lang("No SD Card"));
             }
         }
 
@@ -269,10 +275,13 @@ void statubar_update(void) {
     }
 
     if (g_setting.is_pro) {
-        if (g_setting.elrs.enable)
-            lv_label_set_text(label[STS_ELRS], "ELRS: On ");
-        else
-            lv_label_set_text(label[STS_ELRS], "ELRS: Off");
+        if (g_setting.elrs.enable) {
+            snprintf(buf, sizeof(buf), "ELRS: %s ", _lang("On"));
+            lv_label_set_text(label[STS_ELRS], buf);
+        } else {
+            snprintf(buf, sizeof(buf), "ELRS: %s ", _lang("Off"));
+            lv_label_set_text(label[STS_ELRS], buf);
+        }
 
         page_wifi_get_statusbar_text(buf, sizeof(buf));
         lv_label_set_text(label[STS_WIFI], buf);
