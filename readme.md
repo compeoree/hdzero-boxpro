@@ -46,7 +46,7 @@ SD Card File Hierarchy:
 
 ```
 /develop.sh
-/HDZGOOGLE
+/HDZGOGGLE
 ```
 
 Development script (develop.sh):
@@ -101,4 +101,3 @@ https://discord.gg/kGsnEDMb2V
 Or the official Facebook group:
 
 https://www.facebook.com/groups/hdzero
-

@@ -1,6 +1,5 @@
 #include "sdcard.h"
 
-#include "log/log.h"
 #include <sys/stat.h>
 #include <sys/vfs.h>
 #include <unistd.h>
@@ -31,7 +30,6 @@ void sdcard_update_free_size() {
         g_sdcard_free_size = (info.f_bsize * info.f_bavail) >> 20; // in MB
     else
         g_sdcard_free_size = 0;
-    // LOGI("g_sdcard_free_size %d", g_sdcard_free_size);
 }
 
 bool sdcard_is_full() {

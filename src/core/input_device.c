@@ -146,7 +146,6 @@ void tune_channel(uint8_t action) {
                 }
             }
         }
-
         tune_timer = 0;
         tune_state = 1;
         channel_osd_mode = CHANNEL_SHOWTIME;
@@ -604,7 +603,7 @@ void input_device_init() {
     app_state_push(APP_STATE_MAINMENU);
 #else
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        printf("Error initializing SDK: %s\n", SDL_GetError());
+        printf("Error initializing SDL: %s\n", SDL_GetError());
     }
 #endif
     pthread_create(&input_device_pid, NULL, thread_input_device, NULL);

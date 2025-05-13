@@ -11,6 +11,8 @@
 #include <lvgl/lvgl.h>
 #include <minIni.h>
 
+#include "lang/language.h"
+
 #ifdef EMULATOR_BUILD
 #include "SDLaccess.h"
 SDL_mutex *global_sdl_mutex;
@@ -107,14 +109,14 @@ void start_running(void) {
             g_source_info.source = SOURCE_AV_IN;
         } else { // HDMI in
             sleep(2);
-            g_source_info.hdmi_in_status = IT66021_Sig_det();
-            if (g_source_info.hdmi_in_status) {
-                app_switch_to_hdmi_in();
-                g_source_info.source = SOURCE_HDMI_IN;
-            } else {
-                g_source_info.source = SOURCE_HDZERO;
-                app_state_push(APP_STATE_MAINMENU);
-            }
+            // g_source_info.hdmi_in_status = IT66021_Sig_det();
+            // if (g_source_info.hdmi_in_status) {
+            app_switch_to_hdmi_in();
+            g_source_info.source = SOURCE_HDMI_IN;
+            //} else {
+            //    g_source_info.source = SOURCE_HDZERO;
+            //    app_state_push(APP_STATE_MAINMENU);
+            //}
         }
     }
 
@@ -146,16 +148,18 @@ void lvgl_init() {
 int main(int argc, char *argv[]) {
     pthread_mutex_init(&lvgl_mutex, NULL);
 
-    #ifdef EMULATOR_BUILD
-        global_sdl_mutex = SDL_CreateMutex();
-        if(global_sdl_mutex == NULL) {
-            LOGE("Failed to create an SDL mutex!");
-        }
-    #endif
+#ifdef EMULATOR_BUILD
+    global_sdl_mutex = SDL_CreateMutex();
+    if (global_sdl_mutex == NULL) {
+        LOGE("Failed to create an SDL mutex!");
+    }
+#endif
 
     // 1. Recall configuration
     settings_init();
     settings_load();
+    language_init();
+    vclk_phase_init();
     pclk_phase_init();
 
     // 2. Initialize communications.
@@ -203,6 +207,9 @@ int main(int argc, char *argv[]) {
 
     // 8.1 set initial analog module power state
     // Analog_Module_Power(0);
+
+    // Head alarm
+    head_alarm_init();
 
     // 10. Execute main loop
     g_init_done = 1;

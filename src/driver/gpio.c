@@ -42,7 +42,7 @@ void gpio_open(int port_num) {
     }
 
     char buf[64];
-    sprintf(buf, "/sys/class/gpio/gpio%d/direction", port_num);
+    snprintf(buf, sizeof(buf), "/sys/class/gpio/gpio%d/direction", port_num);
 
     if (!fs_printf(buf, "out")) {
         return;
