@@ -159,7 +159,6 @@ int main(int argc, char *argv[]) {
     settings_init();
     settings_load();
     language_init();
-    vclk_phase_init();
     pclk_phase_init();
 
     // 2. Initialize communications.
