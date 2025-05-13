@@ -142,13 +142,13 @@ int statusbar_init(void) {
     lv_label_set_recolor(label[STS_SDCARD], true);
 
     if (g_source_info.source == SOURCE_HDZERO)
-        snprintf(buf, sizeof(buf), "%s: HDZero %s",_lang("RF), channel2str(1, g_setting.source.hdzero_band, g_setting.scan.channel & 0x7F));
+        snprintf(buf, sizeof(buf), "%s: HDZero %s", _lang("RF"), channel2str(1, g_setting.source.hdzero_band, g_setting.scan.channel & 0x7F));
     else if (g_source_info.source == SOURCE_HDMI_IN)
         snprintf(buf, sizeof(buf), "HDMI %s", _lang("In"));
     else if (g_source_info.source == SOURCE_AV_IN)
         snprintf(buf, sizeof(buf), "AV %s", _lang("In"));
     else if (g_source_info.source == SOURCE_AV_MODULE)
-        sprintf(buf, "%s: %s %s",_lang("RF"), _lang("Analog"), channel2str(0, 0, g_setting.source.analog_channel));
+        sprintf(buf, "%s: %s %s", _lang("RF"), _lang("Analog"), channel2str(0, 0, g_setting.source.analog_channel));
     else
         sprintf(buf, " ");
 

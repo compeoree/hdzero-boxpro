@@ -72,7 +72,7 @@ static lv_obj_t *page_source_create(lv_obj_t *parent, panel_arr_t *arr) {
     create_btn_group_item(&btn_group1, cont, 2, _lang("HDZero Band"), _lang("Raceband"), _lang("Lowband"), "", "", 4);
     btn_group_set_sel(&btn_group1, g_setting.source.hdzero_band);
 
-    create_btn_group_item(&btn_group2, cont, 2, _lang("HDZero BW)", _lang("Wide"), _lang("Narrow"), "", "", 5);
+    create_btn_group_item(&btn_group2, cont, 2, _lang("HDZero BW"), _lang("Wide"), _lang("Narrow"), "", "", 5);
     btn_group_set_sel(&btn_group2, g_setting.source.hdzero_bw);
 
     create_btn_group_item(&btn_group3, cont, 2, _lang("Analog Ratio"), _lang("4:3"), _lang("16:9"), "", "", 6);
@@ -122,7 +122,7 @@ void source_status_timer() {
     snprintf(buf, sizeof(buf), "%s: %s", _lang("Analog"), channel2str(0, 0, g_setting.source.analog_channel));
     lv_label_set_text(label[1], buf);
 
-    snprintf(buf, sizeof(buf), "HDMI %s: %s",_lang("In"), state2string(g_source_info.hdmi_in_status));
+    snprintf(buf, sizeof(buf), "HDMI %s: %s", _lang("In"), state2string(g_source_info.hdmi_in_status));
     lv_label_set_text(label[2], buf);
 
     snprintf(buf, sizeof(buf), "AV %s: %s", _lang("In"), state2string(g_source_info.av_in_status));
@@ -162,7 +162,7 @@ static void page_source_select_av_in() {
 static void page_source_select_analog() {
     app_switch_to_analog(0);
     app_state_push(APP_STATE_VIDEO);
-    g_source_info.source = SOURCE_ANALOG;
+    g_source_info.source = SOURCE_AV_MODULE;
     dvr_select_audio_source(2);
     dvr_enable_line_out(true);
 }
@@ -173,7 +173,7 @@ void source_toggle() {
     case SOURCE_HDZERO:
         page_source_select_analog();
         break;
-    case SOURCE_ANALOG:
+    case SOURCE_AV_MODULE:
         page_source_select_hdzero();
         break;
     case SOURCE_AV_IN:
@@ -196,7 +196,7 @@ void source_cycle() {
             page_source_select_av_in();
         }
         break;
-    case SOURCE_EXPANSION:
+    case SOURCE_AV_MODULE:
         page_source_select_hdzero();
         break;
     case SOURCE_AV_IN:
