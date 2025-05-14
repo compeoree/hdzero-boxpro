@@ -216,7 +216,7 @@ static void page_source_on_click(uint8_t key, int sel) {
         break;
 
     case 1: // AV Module
-        page_source_select_hdzero();
+        page_source_select_analog();
         break;
 
     case 2: // HDMI in
