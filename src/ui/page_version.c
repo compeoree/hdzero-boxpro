@@ -1043,7 +1043,7 @@ void version_update_title() {
     }
     if (g_setting.is_pro) {
         snprintf(buf, sizeof(buf), "%s %s", _lang("Update"), _lang("ESP32"));
-        lv_label_set_text(btn_esp, "Update ESP32");
+        lv_label_set_text(btn_esp, buf);
     }
 }
 

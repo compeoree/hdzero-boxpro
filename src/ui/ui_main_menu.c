@@ -255,7 +255,7 @@ static void main_menu_create_entry(lv_obj_t *menu, lv_obj_t *section, page_pack_
     lv_obj_t *cont = lv_menu_cont_create(section);
 
     pp->label = lv_label_create(cont);
-    lv_label_set_text(pp->label, pp->name);
+    lv_label_set_text(pp->label, _lang(pp->name));
     lv_obj_set_style_text_font(pp->label, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_line_space(pp->label, 0, 0);
     lv_label_set_long_mode(pp->label, LV_LABEL_LONG_SCROLL_CIRCULAR);
@@ -272,9 +272,9 @@ static void main_menu_create_entry(lv_obj_t *menu, lv_obj_t *section, page_pack_
     }
 }
 
-static int post_bootup_actions_cmp(const void * lhs, const void * rhs) {
-    const int32_t leftPriority = ((page_pack_t*) lhs)->post_bootup_run_priority;
-    const int32_t rightPriority = ((page_pack_t*) rhs)->post_bootup_run_priority;
+static int post_bootup_actions_cmp(const void *lhs, const void *rhs) {
+    const int32_t leftPriority = ((page_pack_t *)lhs)->post_bootup_run_priority;
+    const int32_t rightPriority = ((page_pack_t *)rhs)->post_bootup_run_priority;
 
     if (leftPriority < rightPriority) {
         return -1;
@@ -335,7 +335,7 @@ void main_menu_init(void) {
     }
 
     // Resort based on priority
-    qsort(post_bootup_actions, post_bootup_actions_count, sizeof(page_pack_t*), post_bootup_actions_cmp);
+    qsort(post_bootup_actions, post_bootup_actions_count, sizeof(page_pack_t *), post_bootup_actions_cmp);
 
     lv_obj_add_style(section, &style_rootmenu, LV_PART_MAIN);
     lv_obj_set_size(section, 240, 672);
