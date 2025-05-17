@@ -34,6 +34,7 @@ An appropiate vscode build task ships with this repository as well.
 The firmware is generated as ~/hdz_boxpro/code/out/HDZERO_BOXPRO-x.x.x.bin
 Where x.x.x is the OTA_VER.RX_VER.VA_VER
 
+
 ## Loading the Firmware
 
 Firmware can be either flashed via boxpro menu or alternatively be executed via the SD Card with a custom development script.  An example of this development script is provided below.  The boxpro automatically checks to see if the develop.sh script exists in the root of the SD Card and if found develop.sh is then executed.
@@ -46,7 +47,7 @@ SD Card File Hierarchy:
 
 ```
 /develop.sh
-/HDZGOOGLE
+/HDZGOGGLE
 ```
 
 Development script (develop.sh):
@@ -101,4 +102,3 @@ https://discord.gg/kGsnEDMb2V
 Or the official Facebook group:
 
 https://www.facebook.com/groups/hdzero
-

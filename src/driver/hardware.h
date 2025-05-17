@@ -47,7 +47,8 @@ typedef enum {
     VIDEO_SOURCE_HDMI_IN_720P60 = 10,
     VIDEO_SOURCE_HDMI_IN_720P100 = 11,
     VIDEO_SOURCE_HDMI_OUT = 11,
-    VIDEO_SOURCE_NUM = 12,
+    VIDEO_SOURCE_TP2825_EX = 12,
+    VIDEO_SOURCE_NUM = 13,
 } video_source_t;
 
 typedef struct {

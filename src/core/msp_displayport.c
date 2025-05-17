@@ -180,7 +180,7 @@ void recive_one_frame(uint8_t *uart_buf, uint8_t uart_buf_len) {
             break;
 
         } // switch(rx_state)
-    } // while(RS_ready1())
+    }     // while(RS_ready1())
 }
 
 void parser_rx(uint8_t function, uint8_t index, uint8_t *rx_buf) {

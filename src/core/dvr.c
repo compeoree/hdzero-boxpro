@@ -11,12 +11,14 @@
 #include "core/msp_displayport.h"
 #include "core/settings.h"
 #include "driver/hardware.h"
+#include "record/record_definitions.h"
 #include "ui/page_common.h"
 #include "util/sdcard.h"
 #include "util/system.h"
 
 bool dvr_is_recording = false;
 
+static time_t dvr_recording_start = 0;
 static pthread_mutex_t dvr_mutex;
 
 ///////////////////////////////////////////////////////////////////
@@ -44,14 +46,14 @@ void dvr_update_status() {
 void dvr_enable_line_out(bool enable) {
     char buf[128];
     if (enable) {
-        sprintf(buf, "%s out_on", AUDIO_SEL_SH);
+        snprintf(buf, sizeof(buf), "%s out_on", AUDIO_SEL_SH);
         system_exec(buf);
-        sprintf(buf, "%s out_linein_on", AUDIO_SEL_SH);
+        snprintf(buf, sizeof(buf), "%s out_linein_on", AUDIO_SEL_SH);
         system_exec(buf);
-        sprintf(buf, "%s out_dac_off", AUDIO_SEL_SH);
+        snprintf(buf, sizeof(buf), "%s out_dac_off", AUDIO_SEL_SH);
         system_exec(buf);
     } else {
-        sprintf(buf, "%s out_off", AUDIO_SEL_SH);
+        snprintf(buf, sizeof(buf), "%s out_off", AUDIO_SEL_SH);
         system_exec(buf);
     }
 }
@@ -65,7 +67,7 @@ void dvr_select_audio_source(uint8_t source) {
 
     if (source > 2)
         source = 2;
-    sprintf(buf, "%s %s", AUDIO_SEL_SH, audio_source[source]);
+    snprintf(buf, sizeof(buf), "%s %s", AUDIO_SEL_SH, audio_source[source]);
     system_exec(buf);
 }
 
@@ -132,6 +134,31 @@ void dvr_toggle() {
     dvr_cmd(DVR_TOGGLE);
 }
 
+void dvr_star() {
+    pthread_mutex_lock(&dvr_mutex);
+    if (dvr_is_recording) {
+        char current_dvr_file[256] = "";
+        FILE *now_recording_file = fopen(NOW_RECORDING_FILE, "r");
+        if (now_recording_file) {
+            const size_t read_count = fread(current_dvr_file, 1, sizeof(current_dvr_file) - 1, now_recording_file);
+            if (ferror(now_recording_file) == 0) {
+                current_dvr_file[read_count] = '\0';
+                strcat(current_dvr_file, REC_starSUFFIX);
+                FILE *like_file = fopen(current_dvr_file, "a");
+                if (like_file) {
+                    unsigned recording_duration_s = time(NULL) - dvr_recording_start;
+                    unsigned minutes = recording_duration_s / 60;
+                    unsigned seconds = recording_duration_s % 60;
+                    fprintf(like_file, REC_starFORMAT, minutes, seconds);
+                    fclose(like_file);
+                }
+            }
+            fclose(now_recording_file);
+        }
+    }
+    pthread_mutex_unlock(&dvr_mutex);
+}
+
 static void dvr_update_record_conf() {
     if (g_setting.record.format_ts || (g_source_info.source == SOURCE_HDMI_IN))
         ini_puts("record", "type", "ts", REC_CONF);
@@ -161,7 +188,7 @@ static void dvr_update_record_conf() {
             ini_putl("venc", "kbps", 24000, REC_CONF);
             ini_putl("venc", "h265", 1, REC_CONF);
         }
-    } else if (g_source_info.source == SOURCE_AV_IN) { // Analog
+    } else if (g_source_info.source == SOURCE_AV_IN || g_source_info.source == SOURCE_AV_MODULE) { // Analog
         ini_putl("venc", "width", 1280, REC_CONF);
         ini_putl("venc", "height", 720, REC_CONF);
 
@@ -228,6 +255,7 @@ static void dvr_update_record_conf() {
 
     ini_putl("record", "audio", g_setting.record.audio, REC_CONF);
     dvr_select_audio_source(g_setting.record.audio_source);
+    ini_putl("record", "naming", g_setting.record.naming, REC_CONF);
 }
 
 void dvr_cmd(osd_dvr_cmd_t cmd) {
@@ -256,7 +284,9 @@ void dvr_cmd(osd_dvr_cmd_t cmd) {
         if (!dvr_is_recording && !sdcard_is_full()) {
             dvr_update_record_conf();
             dvr_is_recording = true;
+            usleep(100 * 1000);
             system_script(REC_START);
+            dvr_recording_start = time(NULL);
             sleep(2); // wait for record process
         }
     } else {

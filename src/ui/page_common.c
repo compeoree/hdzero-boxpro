@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "lang/language.h"
 #include "ui/ui_attribute.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -26,7 +27,7 @@ int create_text(struct menu_obj_s *s, lv_obj_t *parent, bool is_icon, const char
 
     if (txt) {
         label = lv_label_create(obj);
-        lv_label_set_text(label, txt);
+        lv_label_set_text(label, _lang(txt));
         lv_obj_set_style_text_font(label, &lv_font_montserrat_18, 0);
         lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL_CIRCULAR);
         //    lv_obj_set_flex_grow(label, 1);
@@ -175,7 +176,7 @@ void create_slider_item_compact(slider_group_t *slider_group, lv_obj_t *parent, 
     slider_group->label = lv_label_create(parent);
     char buf[25];
     memset(buf, 0, sizeof(buf));
-    sprintf(buf, "%d", default_value);
+    snprintf(buf, sizeof(buf), "%d", default_value);
     lv_label_set_text(slider_group->label, buf);
     lv_obj_set_style_text_font(slider_group->label, font, 0);
     lv_obj_set_style_text_align(slider_group->label, LV_TEXT_ALIGN_LEFT, 0);
@@ -223,7 +224,7 @@ void create_slider_item(slider_group_t *slider_group, lv_obj_t *parent, const ch
     slider_group->label = lv_label_create(parent);
     char buf[25];
     memset(buf, 0, sizeof(buf));
-    sprintf(buf, "%d", default_value);
+    snprintf(buf, sizeof(buf), "%d", default_value);
     lv_label_set_text(slider_group->label, buf);
     lv_obj_set_style_text_font(slider_group->label, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_align(slider_group->label, LV_TEXT_ALIGN_CENTER, 0);
@@ -238,7 +239,7 @@ void create_slider_item(slider_group_t *slider_group, lv_obj_t *parent, const ch
 
 void update_slider_item_with_value(slider_group_t *slider_group, int value) {
     char str[20];
-    sprintf(str, "%d", value);
+    snprintf(str, sizeof(str), "%d", value);
     lv_slider_set_value(slider_group->slider, value, LV_ANIM_OFF);
     lv_label_set_text(slider_group->label, str);
 }

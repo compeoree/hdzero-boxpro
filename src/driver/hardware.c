@@ -58,9 +58,12 @@ uint32_t pclk_phase_default[VIDEO_SOURCE_NUM] = {
     0x00000000, // VIDEO_SOURCE_HDMI_IN_720P50
     0x00000000, // VIDEO_SOURCE_HDMI_IN_720P60
     0x00000000, // VIDEO_SOURCE_HDMI_IN_720P100
+    0x00000000, // VIDEO_SOURCE_TP2825_EX, DO NOT USE
 };
+
 uint32_t pclk_phase_load[VIDEO_SOURCE_NUM];
 uint32_t pclk_phase[VIDEO_SOURCE_NUM];
+
 uint8_t pclk_phase_read_file(char *file_path) {
     FILE *file;
     char line[256];
@@ -113,6 +116,8 @@ uint8_t pclk_phase_read_file(char *file_path) {
                 pclk_phase_load[VIDEO_SOURCE_HDMI_IN_720P60] = value;
             else if (strcmp(type_str, "VIDEO_SOURCE_HDMI_IN_720P100") == 0)
                 pclk_phase_load[VIDEO_SOURCE_HDMI_IN_720P100] = value;
+            else if (strcmp(type_str, "VIDEO_SOURCE_TP2825_EX") == 0)
+                pclk_phase_load[VIDEO_SOURCE_TP2825_EX] = value;
         }
     }
 
@@ -143,6 +148,8 @@ uint8_t pclk_phase_write_file(char *file_path, uint32_t phase_p[]) {
     fprintf(file, "VIDEO_SOURCE_HDMI_IN_720P50 0x%08x\r\n", phase_p[VIDEO_SOURCE_HDMI_IN_720P50]);
     fprintf(file, "VIDEO_SOURCE_HDMI_IN_720P60 0x%08x\r\n", phase_p[VIDEO_SOURCE_HDMI_IN_720P60]);
     fprintf(file, "VIDEO_SOURCE_HDMI_IN_720P100 0x%08x\r\n", phase_p[VIDEO_SOURCE_HDMI_IN_720P100]);
+    fprintf(file, "VIDEO_SOURCE_TP2825_EX 0x%08x\r\n", phase_p[VIDEO_SOURCE_TP2825_EX]);
+
     fclose(file);
 }
 
@@ -173,6 +180,7 @@ void pclk_phase_load_system() {
         }
     }
 }
+
 void pclk_phase_dump() {
     FILE *file;
     char *file_path = "/mnt/extsd/pclk_phase_dump.cfg";
@@ -184,10 +192,12 @@ void pclk_phase_dump() {
 
     pclk_phase_write_file(file_path, pclk_phase);
 }
+
 void pclk_phase_init() {
     pclk_phase_load_system();
     pclk_phase_dump();
 }
+
 /*
 DCLK_INVERT
     0: Disable dclk invert
@@ -249,7 +259,7 @@ void pclk_phase_set(video_source_t source) {
     // bit[3] dvr
     csic_pclk_invert_set((pclk_phase[source] >> 3) & 1);
 
-    // bit [7] [5:4] hdmi out
+    // bit [5:4] hdmi out  bit[7]
     IT66121_set_phase((pclk_phase[source] >> 4) & 3, (pclk_phase[source] >> 7) & 1);
 }
 void hw_stat_init() {
@@ -265,7 +275,7 @@ void hw_stat_init() {
     g_hw_stat.av_valid = 0;
 
     g_hw_stat.hdmiin_valid = 0;
-    g_hw_stat.hdmiin_vtmg = HDMIIN_VTMG_UNKNOW;
+    g_hw_stat.hdmiin_vtmg = HDMIIN_VTMG_1080P50;
 
     pthread_mutex_init(&hardware_mutex, NULL);
 }
@@ -589,9 +599,8 @@ void Display_UI() {
 }
 
 void HDZero_open(int bw) {
-    if (bw != g_hw_stat.hdz_bw) { // reopen with different bw
+    if (bw != g_hw_stat.hdz_bw) // reopen with different bw
         HDZero_Close();
-    }
 
     if (g_hw_stat.hdzero_open == 0) {
         g_hw_stat.hdz_bw = bw;
@@ -600,7 +609,6 @@ void HDZero_open(int bw) {
         DM5680_SetBB(1);
         g_hw_stat.hdzero_open = 1;
     }
-
     LOGI("HDZero: open");
 }
 
@@ -628,12 +636,6 @@ int HDZERO_detect() // return = 1: vtmg to V536 changed
 
             // 1. Change fps
             Display_HDZ_t(CAM_MODE, cam_4_3);
-#if (0)
-            if (CAM_MODE == VR_1080P30) {
-                fhd_req = 1;
-            } else if (cam_mode_last == VR_1080P30)
-                fhd_req = -1;
-#endif
             dvr_update_vi_conf(CAM_MODE);
             system_script(REC_STOP_LIVE);
             cam_mode_last = CAM_MODE;
@@ -722,8 +724,7 @@ void Source_AV(uint8_t sel) // 0=rtc6715; 1=AV_in
 int AV_in_detect() // return = 1: vtmg to V536 changed
 {
     static int det_last = -1;
-    static int det_cnt = 00;
-    static int det2_cnt = 0;
+    static int det_cnt = 0, det2_cnt = 0;
     int rdat, det;
     int ret = 0;
 
@@ -853,8 +854,10 @@ int HDMI_in_detect() {
     pthread_mutex_lock(&hardware_mutex);
 
     if ((g_hw_stat.source_mode == SOURCE_MODE_UI) || (g_hw_stat.source_mode == SOURCE_MODE_HDMIIN)) {
+
         last_vld = g_hw_stat.hdmiin_valid;
         g_hw_stat.hdmiin_valid = IT66021_Sig_det();
+
         if (g_hw_stat.source_mode == SOURCE_MODE_HDMIIN) {
             if (g_hw_stat.hdmiin_valid) {
                 vtmg = IT66021_Get_VTMG(&freq_ref);
@@ -875,11 +878,10 @@ int HDMI_in_detect() {
                         dvr_update_vi_conf(VR_1080P60);
                         g_hw_stat.vdpo_tmg = VDPO_TMG_720P60;
                         I2C_Write(ADDR_FPGA, 0x8D, 0x04);
+                        pclk_phase_set(VIDEO_SOURCE_HDMI_IN_1080P60);
                         I2C_Write(ADDR_FPGA, 0x80, 0x00);
                         I2C_Write(ADDR_FPGA, 0x8C, 0x04);
                         I2C_Write(ADDR_FPGA, 0x06, 0x0F);
-                        pclk_phase_set(VIDEO_SOURCE_HDMI_IN_1080P60);
-
                         LCD_display(1);
                         g_hw_stat.hdmiin_vtmg = HDMIIN_VTMG_1080P60;
                         break;
@@ -903,10 +905,10 @@ int HDMI_in_detect() {
                         dvr_update_vi_conf(VR_1080P50);
                         g_hw_stat.vdpo_tmg = VDPO_TMG_720P60;
                         I2C_Write(ADDR_FPGA, 0x8D, 0x14);
+                        pclk_phase_set(VIDEO_SOURCE_HDMI_IN_1080P60);
                         I2C_Write(ADDR_FPGA, 0x80, 0x40);
                         I2C_Write(ADDR_FPGA, 0x8C, 0x04);
                         I2C_Write(ADDR_FPGA, 0x06, 0x0F);
-                        pclk_phase_set(VIDEO_SOURCE_HDMI_IN_1080P60);
 
                         LCD_display(1);
                         g_hw_stat.hdmiin_vtmg = HDMIIN_VTMG_1080Pother;
@@ -917,11 +919,11 @@ int HDMI_in_detect() {
                         dvr_update_vi_conf(VR_720P50);
                         g_hw_stat.vdpo_tmg = VDPO_TMG_720P50;
                         I2C_Write(ADDR_FPGA, 0x8D, 0x14);
+                        pclk_phase_set(VIDEO_SOURCE_HDMI_IN_720P50);
+
                         I2C_Write(ADDR_FPGA, 0x80, 0x60);
                         I2C_Write(ADDR_FPGA, 0x8C, 0x04);
                         I2C_Write(ADDR_FPGA, 0x06, 0x0F);
-                        pclk_phase_set(VIDEO_SOURCE_HDMI_IN_720P50);
-
                         LCD_display(1);
                         g_hw_stat.hdmiin_vtmg = HDMIIN_VTMG_720P50;
                         break;
@@ -931,11 +933,10 @@ int HDMI_in_detect() {
                         dvr_update_vi_conf(VR_720P60);
                         g_hw_stat.vdpo_tmg = VDPO_TMG_720P60;
                         I2C_Write(ADDR_FPGA, 0x8D, 0x14);
+                        pclk_phase_set(VIDEO_SOURCE_HDMI_IN_720P60);
                         I2C_Write(ADDR_FPGA, 0x80, 0x80);
                         I2C_Write(ADDR_FPGA, 0x8C, 0x04);
                         I2C_Write(ADDR_FPGA, 0x06, 0x0F);
-                        pclk_phase_set(VIDEO_SOURCE_HDMI_IN_720P60);
-
                         LCD_display(1);
                         g_hw_stat.hdmiin_vtmg = HDMIIN_VTMG_720P60;
                         break;
@@ -945,11 +946,10 @@ int HDMI_in_detect() {
                         dvr_update_vi_conf(VR_540P90);
                         g_hw_stat.vdpo_tmg = VDPO_TMG_720P100;
                         I2C_Write(ADDR_FPGA, 0x8D, 0x04);
+                        pclk_phase_set(VIDEO_SOURCE_HDMI_IN_720P100);
                         I2C_Write(ADDR_FPGA, 0x80, 0xA0);
                         I2C_Write(ADDR_FPGA, 0x8C, 0x04);
                         I2C_Write(ADDR_FPGA, 0x06, 0x0F);
-                        pclk_phase_set(VIDEO_SOURCE_HDMI_IN_720P100);
-
                         LCD_display(1);
                         g_hw_stat.hdmiin_vtmg = HDMIIN_VTMG_720P100;
                         break;

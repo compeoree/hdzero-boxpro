@@ -23,6 +23,7 @@
 #include "driver/i2c.h"
 #include "driver/lcd.h"
 #include "driver/uart.h"
+#include "lang/language.h"
 #include "ui/page_common.h"
 #include "ui/ui_main_menu.h"
 #include "ui/ui_porting.h"
@@ -198,6 +199,8 @@ void page_scannow_set_channel_label(void) {
 // 960-173
 // 787
 static lv_obj_t *page_scannow_create(lv_obj_t *parent, panel_arr_t *arr) {
+    char buf[256];
+
     lv_obj_t *page = lv_menu_page_create(parent, NULL);
     lv_obj_clear_flag(page, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(page, 780, 600);
@@ -228,7 +231,7 @@ static lv_obj_t *page_scannow_create(lv_obj_t *parent, panel_arr_t *arr) {
     lv_bar_set_range(progressbar, 0, 14);
 
     label = lv_label_create(cont1);
-    lv_label_set_text(label, "Scan Ready");
+    lv_label_set_text(label, _lang("Scan Ready"));
     lv_obj_set_style_text_font(label, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
     lv_obj_set_style_text_color(label, lv_color_hex(TEXT_COLOR_DEFAULT), 0);
@@ -238,8 +241,12 @@ static lv_obj_t *page_scannow_create(lv_obj_t *parent, panel_arr_t *arr) {
                          LV_GRID_ALIGN_CENTER, 0, 1);
 
     lv_obj_t *label2 = lv_label_create(cont1);
-    lv_label_set_text(label2, "When scanning is complete, use the\n dial to select a channel and press\n the Enter button to choose");
-    lv_obj_set_style_text_font(label2, &lv_font_montserrat_18, 0);
+    snprintf(buf, sizeof(buf), "%s\n %s\n %s",
+             _lang("When scanning is complete, use the"),
+             _lang("dial to select a channel and press"),
+             _lang("the Enter button to choose"));
+    lv_label_set_text(label2, buf);
+    lv_obj_set_style_text_font(label2, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_align(label2, LV_TEXT_ALIGN_LEFT, 0);
     lv_obj_set_style_text_color(label2, lv_color_hex(TEXT_COLOR_DEFAULT), 0);
     lv_obj_set_style_pad_top(label2, 8, 0);
@@ -319,8 +326,10 @@ int8_t scan_now(void) {
     uint8_t ch, gain;
     bool valid;
     uint8_t valid_index;
+    char buf[128];
 
-    lv_label_set_text(label, "Scanning...");
+    snprintf(buf, sizeof(buf), "%s...", _lang("Scanning"));
+    lv_label_set_text(label, buf);
     lv_bar_set_value(progressbar, 0, LV_ANIM_OFF);
     lv_timer_handler();
     lv_bar_set_value(progressbar, 2, LV_ANIM_OFF);
@@ -358,7 +367,7 @@ int8_t scan_now(void) {
     }
 
     user_select_signal();
-    lv_label_set_text(label, "Scanning done");
+    lv_label_set_text(label, _lang("Scanning done"));
     if (!valid_index)
         return -1;
     else
@@ -366,7 +375,7 @@ int8_t scan_now(void) {
 }
 
 int scan_reinit(void) {
-    lv_label_set_text(label, "Scanning ready");
+    lv_label_set_text(label, _lang("Scanning ready"));
     lv_bar_set_value(progressbar, 0, LV_ANIM_OFF);
     user_clear_signal();
     lv_timer_handler();

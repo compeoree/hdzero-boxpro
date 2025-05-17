@@ -10,6 +10,7 @@
 #include "core/settings.h"
 #include "driver/fans.h"
 #include "driver/nct75.h"
+#include "lang/language.h"
 #include "ui/page_common.h"
 #include "ui/page_fans.h"
 #include "ui/ui_attribute.h"
@@ -40,6 +41,7 @@ static void update_visibility() {
 }
 
 static lv_obj_t *page_fans_create(lv_obj_t *parent, panel_arr_t *arr) {
+    char buf[128];
     lv_obj_t *page = lv_menu_page_create(parent, NULL);
     lv_obj_clear_flag(page, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(page, 780, 600);
@@ -50,7 +52,8 @@ static lv_obj_t *page_fans_create(lv_obj_t *parent, panel_arr_t *arr) {
     lv_obj_add_style(section, &style_submenu, LV_PART_MAIN);
     lv_obj_set_size(section, 780, 600);
 
-    create_text(NULL, section, false, "Fan:", LV_MENU_ITEM_BUILDER_VARIANT_2);
+    snprintf(buf, sizeof(buf), "%s:", _lang("Fans"));
+    create_text(NULL, section, false, buf, LV_MENU_ITEM_BUILDER_VARIANT_2);
 
     lv_obj_t *cont = lv_obj_create(section);
     lv_obj_set_size(cont, 780, 600);
@@ -64,18 +67,18 @@ static lv_obj_t *page_fans_create(lv_obj_t *parent, panel_arr_t *arr) {
 
     create_select_item(arr, cont);
 
-    create_btn_group_item(&btn_group_fans, cont, 2, "Auto Control", "On", "Off", "", "", 0);
-    create_slider_item(&slider_group, cont, "Fan Speed", MAX_FAN_TOP, 2, 1);
+    create_btn_group_item(&btn_group_fans, cont, 2, _lang("Auto Control"), _lang("On"), _lang("Off"), "", "", 0);
+    create_slider_item(&slider_group, cont, _lang("Fan Speed"), MAX_FAN_TOP, 2, 1);
     lv_slider_set_range(slider_group.slider, MIN_FAN_TOP, MAX_FAN_TOP);
 
-    create_label_item(cont, "< Back", 1, 2, 1);
+    snprintf(buf, sizeof(buf), "< %s", _lang("Back"));
+    create_label_item(cont, buf, 1, 2, 1);
 
     btn_group_set_sel(&btn_group_fans, !g_setting.fans.auto_mode);
 
     lv_slider_set_value(slider_group.slider, g_setting.fans.top_speed, LV_ANIM_OFF);
 
-    char buf[5];
-    sprintf(buf, "%d", g_setting.fans.top_speed);
+    snprintf(buf, sizeof(buf), "%d", g_setting.fans.top_speed);
     lv_label_set_text(slider_group.label, buf);
 
     update_visibility();
@@ -84,7 +87,7 @@ static lv_obj_t *page_fans_create(lv_obj_t *parent, panel_arr_t *arr) {
 }
 
 static void fans_top_speed_inc() {
-    char buf[5];
+    char buf[12];
     int32_t value = lv_slider_get_value(slider_group.slider);
 
     if (value < MAX_FAN_TOP)
@@ -92,7 +95,7 @@ static void fans_top_speed_inc() {
 
     lv_slider_set_value(slider_group.slider, value, LV_ANIM_OFF);
 
-    sprintf(buf, "%d", value);
+    snprintf(buf, sizeof(buf), "%d", value);
     lv_label_set_text(slider_group.label, buf);
 
     fans_top_setspeed(value);
@@ -102,14 +105,14 @@ static void fans_top_speed_inc() {
 }
 
 static void fans_top_speed_dec() {
-    char buf[5];
+    char buf[12];
     int32_t value = lv_slider_get_value(slider_group.slider);
 
     if (value > MIN_FAN_TOP)
         value -= 1;
 
     lv_slider_set_value(slider_group.slider, value, LV_ANIM_OFF);
-    sprintf(buf, "%d", value);
+    snprintf(buf, sizeof(buf), "%d", value);
     lv_label_set_text(slider_group.label, buf);
 
     fans_top_setspeed(value);
@@ -197,7 +200,7 @@ void step_topfan() {
     ini_putl("fans", "top_speed", g_setting.fans.top_speed, SETTING_INI);
 
     lv_slider_set_value(slider_group.slider, g_setting.fans.top_speed, LV_ANIM_OFF);
-    sprintf(str, "%d", g_setting.fans.top_speed);
+    snprintf(str, sizeof(str), "%d", g_setting.fans.top_speed);
     lv_label_set_text(slider_group.label, str);
 }
 

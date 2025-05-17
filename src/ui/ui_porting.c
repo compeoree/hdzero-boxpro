@@ -129,14 +129,13 @@ int lvgl_init_porting() {
 
     lv_disp_drv_init(&disp_drv);
 #else
-    if(SDL_WasInit(SDL_INIT_VIDEO) == 0) {
+    if (SDL_WasInit(SDL_INIT_VIDEO) == 0) {
         SDL_InitSubSystem(SDL_INIT_VIDEO);
     } else {
         LOGI("SDL already initialised.");
     }
 
     SDL_LockMutex(global_sdl_mutex);
-
     window = SDL_CreateWindow(WINDOW_NAME,
                               SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               DISP_HOR_RES_FHD, DISP_VER_RES_FHD, 0);
@@ -148,8 +147,8 @@ int lvgl_init_porting() {
                                 SDL_TEXTUREACCESS_STREAMING,
                                 DRAW_HOR_RES_FHD,
                                 DRAW_VER_RES_FHD);
-
     SDL_UnlockMutex(global_sdl_mutex);
+
     fb1 = malloc(DRAW_HOR_RES_FHD * DRAW_VER_RES_FHD * ((LV_COLOR_DEPTH + 7) / 8));
     fb2 = malloc(DRAW_HOR_RES_FHD * DRAW_VER_RES_FHD * ((LV_COLOR_DEPTH + 7) / 8));
 

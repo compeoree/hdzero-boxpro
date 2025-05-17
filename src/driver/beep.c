@@ -32,8 +32,10 @@ static void *beep_thread(void *arg) {
         beep_dur_ms = 0;
         pthread_mutex_unlock(&beep_mutex);
 
-        gpio_set(GPIO_BEEP, 1);
-        usleep(1000 * this_beep_ms);
-        gpio_set(GPIO_BEEP, 0);
+        if (this_beep_ms > 0) {
+            gpio_set(GPIO_BEEP, 1);
+            usleep(this_beep_ms * 1000);
+            gpio_set(GPIO_BEEP, 0);
+        }
     }
 }

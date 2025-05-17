@@ -13,6 +13,7 @@ extern "C" {
 #include <lvgl/lvgl.h>
 
 #include "defines.h"
+
 typedef enum {
     HW_REV_UNKNOWN = 0,
     HW_REV_1,
