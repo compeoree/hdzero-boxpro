@@ -4,7 +4,7 @@
 
 The firmware can either be built in a [devcontainer](https://containers.dev/) or natively on a linux machine.
 
-Note: decompressing the repository in Windows system may damage some files and prevent correct builds.
+Note: decompressing the repository in Windows system may damage some files and prevent correct builds. (symbolic links are broken)
 
 ### Devcontainer Setup
 
